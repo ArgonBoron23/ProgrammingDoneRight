@@ -59,3 +59,4 @@ To drive straight while using joysticks::
     drive.execute()
 
 This behavior works in autonomous as well. Just give the move values (and a value of 0 for rotation) and then call your rotate function. 
+See `Driving Straight <driving_straight.html>`_ for a more thorough discussion of this topic.
