@@ -70,13 +70,39 @@ Derivative gain works by calculating the change in error. By finding this change
 
 Feed-Forward
 --------------
-:math:`F \times Setpoint`
+The most essential part of a good control loop is a well tuned feed-forward.
+Feed-forward accounts for the known dynamics of the system, whereas feedback accounts for deviations from the known behavior like some friction and minor changes in weight.
+Feed-forward models can be derived using physics principles like torque and gravity in conjunction with motor characteristics.
 
-If you have a motor that you know you want to run at 200 revolutions/minute, you *could* have the PID loop do your velocity control by itself. But if you know that the motor needs to run at 200 revs/min, then it seems silly to require the PID loop to take up all the slack, when you could just tell the motor to run at 200 revs/min, and then have the PID loop make the fine adjustements for error.
+Flywheel
+~~~~~~~~
+The most simple feed-forward model is the "flywheel" model, where a static voltage is always applied to get the motor to spin at a constant speed.
+For example, if your motor's maximum RPM is 6000 RPM at 12V, then you should apply :math:`\frac{12}{6000} \times Setpoint` volts to get the motor to spin at ``Setpoint`` RPM.
 
-The F term does exactly that - it provides a constant output for velocity.
+Arm affected by Gravity
+~~~~~~~~~~~~~~~~~~~~~~~
+Another common model is the rotational arm.
+The model can be derived using the effect of gravity on the arm.
+The result of this calulation is the voltage theoretically required to keep the arm perfectly static.
 
-This fixes the issue that PID control is designed for position. For example, the closer to the setpoint the controller is, the more it drops it's output. This is from the P term and is designed so the controller slows down as it approaches the target. However, with velocity control, you want to keep on running at a set speed, not slow down.
+:math:`A \cos \theta`
+
+In this calculation, :math:`\theta` is the angle of the arm above the horizontal. 
+A has units of volts and can be found by using the motor's stall and free torque in combination with the weight and length of the arm.
+Derivation and constant determination can be found in `this post <https://www.chiefdelphi.com/forums/showpost.php?p=1753203&postcount=22>`_.
+
+Cascade Elevator
+~~~~~~~~~~~~~~~~
+With this model, a static voltage is added to the output to oppose the force of gravity.
+The amount of voltage can be determined using the weight of the elevator, the motor torque, and spool radius.
+
+Drivetrain
+~~~~~~~~~~
+With the robot drivetrain, many nonlinear factors should be considered because of the large mass and high friction.
+These terms are kF (static voltage for friction) kV (volts per speed) and kA (volts per acceleration).
+This model can be used to improve following motion profiles as well as improve open loop control.
+Team 449's `paper <https://www.chiefdelphi.com/media/papers/3402>`_ on FRC drive characterization shows the derivation of these terms as well as an empirical method of determining them.
+
 
 Using PID on your robot
 -----------------------
@@ -211,6 +237,8 @@ PID            .6*Ku 1.2*Ku/Tu 3*Ku*Tu/40
 
 Which ones to use
 -----------------
+Feedforward control is necessary on all but the absolute simplest of systems. It's incredibly difficult to get a good response without a feedforward calculation.
+
 P control is best used on slow moving parts that aren't subject to overshooting, or parts of the robot that don't need complete accuracy. Turning to a certain degree, for example, can be done with just P in some cases (but not all).
 
 The most common control loop is PI. It combines simple P control with the fine tuning feature of an Integral gain. This is teams are most likely to use.
